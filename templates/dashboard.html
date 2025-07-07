@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+{% block content %}
+  <div class="container py-5">
+
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h1 class="display-5 fw-bold">Finance Dashboard</h1>
+    </div>
+
+    <!-- Add/Edit Card -->
+    <div class="card shadow-sm mb-5 border-0 rounded-4">
+      <div class="card-body">
+        <h4 class="card-title mb-4">{{ tx and 'Edit' or 'Add' }} Transaction</h4>
+        <form method="post">
+          {% if tx %}
+            <input type="hidden" name="id" value="{{ tx.id }}">
+          {% endif %}
+          <div class="row g-3 align-items-end">
+            <div class="col-sm-12 col-md-3">
+              <label class="form-label">Date</label>
+              <input type="date" name="date" class="form-control form-control-lg rounded-3" value="{{ tx.date if tx else '' }}" required>
+            </div>
+            <div class="col-sm-12 col-md-4">
+              <label class="form-label">Category</label>
+              <input type="text" name="cat" class="form-control form-control-lg rounded-3" placeholder="e.g. Groceries" value="{{ tx.cat if tx else '' }}" required>
+            </div>
+            <div class="col-sm-12 col-md-3">
+              <label class="form-label">Amount ($)</label>
+              <input type="number" step="0.01" name="amt" class="form-control form-control-lg rounded-3" placeholder="0.00" value="{{ tx.amt if tx else '' }}" required>
+            </div>
+            <div class="col-sm-12 col-md-2 d-grid">
+              <button class="btn btn-{{ tx and 'success' or 'primary' }} btn-lg rounded-3">{{ tx and 'Save' or 'Add' }}</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="d-flex mb-4 align-items-end">
+      <form class="row g-3 flex-grow-1" method="get">
+        <div class="col-auto">
+          <label class="form-label">From</label>
+          <input type="date" name="start" class="form-control" value="{{ request.args.get('start','') }}">
+        </div>
+        <div class="col-auto">
+          <label class="form-label">To</label>
+          <input type="date" name="end" class="form-control" value="{{ request.args.get('end','') }}">
+        </div>
+        <div class="col-auto d-grid">
+          <button class="btn btn-outline-primary">Filter</button>
+        </div>
+        <div class="col-auto d-grid">
+          <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">Clear</a>
+        </div>
+      </form>
+    </div>
+
+    <!-- Transactions Table -->
+    <div class="card shadow-sm mb-5 border-0 rounded-4">
+      <div class="card-body">
+        <h4 class="card-title mb-3">Recent Transactions</h4>
+        <div class="table-responsive">
+          <table class="table align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Date</th>
+                <th>Category</th>
+                <th class="text-end">Amount ($)</th>
+                <th class="text-center">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for id, date, cat, amt in rows %}
+              <tr>
+                <td>{{ date }}</td>
+                <td>{{ cat }}</td>
+                <td class="text-end fw-bold">{{ '%.2f'|format(amt) }}</td>
+                <td class="text-center">
+                  <a href="{{ url_for('dashboard', edit=id) }}" class="btn btn-sm btn-outline-secondary me-2">
+                    Edit
+                  </a>
+                  <a href="{{ url_for('delete_tx', id=id) }}" class="btn btn-sm btn-outline-danger">
+                    Delete
+                  </a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Spending Chart -->
+    <div class="row justify-content-center mb-5">
+      <div class="col-md-6">
+        <div class="card shadow-sm border-0 rounded-4">
+          <div class="card-body">
+            <h4 class="card-title mb-4">This Month’s Spending</h4>
+            <div class="ratio ratio-4x3">
+              <canvas id="chart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chart Script -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const data = JSON.parse('{{ chart_data | safe }}');
+      new Chart(document.getElementById('chart'), {
+        type: 'pie',
+        data: {
+          labels: data.labels,
+          datasets: [{ data: data.data, backgroundColor: ['#0d6efd','#6f42c1','#fd7e14','#198754','#dc3545'] }]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { position: 'bottom' } }
+        }
+      });
+    });
+  </script>
+{% endblock %}

@@ -1,0 +1,7 @@
+EOF
+venv/
+*.pyc
+__pycache__/
+finances.db
+.env
+EOF
