@@ -1,6 +1,7 @@
 # Finance Dashboard
 
 A modern, single-page Flask app for tracking personal transactions and visualizing monthly spending.
+<img width="2151" height="1983" alt="Image" src="https://github.com/user-attachments/assets/a5d4dede-b040-45a6-8be0-fe7254f94977" />
 
 ## Features
 - **Unified form** to Add & Edit transactions  
