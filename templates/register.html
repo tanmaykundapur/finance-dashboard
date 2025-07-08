@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container py-5"><h2>Register</h2>
+  <form method="post">
+    <div class="mb-3"><input type="email" name="email" class="form-control" placeholder="Email" required></div>
+    <div class="mb-3"><input type="password" name="password" class="form-control" placeholder="Password" required></div>
+    <button class="btn btn-success">Sign Up</button>
+    <a href="{{ url_for('auth.login') }}" class="btn btn-link">Log In</a>
+  </form>
+</div>
+{% endblock %}

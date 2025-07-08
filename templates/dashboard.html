@@ -1,5 +1,15 @@
 {% extends 'base.html' %}
 {% block content %}
+  {% if current_user.is_authenticated %}
+  <nav class="navbar navbar-light bg-light rounded-3 mb-4">
+    <div class="container-fluid">
+      <span class="navbar-text">
+        Logged in as {{ current_user.email }}
+      </span>
+      <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-secondary">Logout</a>
+    </div>
+  </nav>
+  {% endif %}
   <div class="container py-5">
 
     <!-- Page Header -->
@@ -51,7 +61,7 @@
           <button class="btn btn-outline-primary">Filter</button>
         </div>
         <div class="col-auto d-grid">
-          <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">Clear</a>
+          <a href="{{ url_for('dashboard.dashboard') }}" class="btn btn-outline-secondary">Clear</a>
         </div>
       </form>
     </div>
@@ -77,10 +87,10 @@
                 <td>{{ cat }}</td>
                 <td class="text-end fw-bold">{{ '%.2f'|format(amt) }}</td>
                 <td class="text-center">
-                  <a href="{{ url_for('dashboard', edit=id) }}" class="btn btn-sm btn-outline-secondary me-2">
+                  <a href="{{ url_for('dashboard.dashboard', edit=id) }}" class="btn btn-sm btn-outline-secondary me-2">
                     Edit
                   </a>
-                  <a href="{{ url_for('delete_tx', id=id) }}" class="btn btn-sm btn-outline-danger">
+                  <a href="{{ url_for('dashboard.delete_tx', id=id) }}" class="btn btn-sm btn-outline-danger">
                     Delete
                   </a>
                 </td>

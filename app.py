@@ -1,104 +1,31 @@
 # app.py
-from flask import Flask, render_template, request, redirect, url_for
-import sqlite3, datetime, json
+from flask import Flask
+from dashboard import dashboard_bp
+from auth import auth_bp, LoginManager, User
 
-app = Flask(__name__)
-DB = 'finances.db'
+def create_app():
+    app = Flask(__name__)
+    app.config['SECRET_KEY'] = 'replace-with-a-secure-random-value'
+    app.config['DB_PATH'] = 'finances.db'
 
-def init_db():
-    with sqlite3.connect(DB) as conn:
-        conn.execute('''
-          CREATE TABLE IF NOT EXISTS tx (
-            id INTEGER PRIMARY KEY,
-            date TEXT,
-            cat TEXT,
-            amt REAL
-          )
-        ''')
+    # Setup Flask-Login
+    login = LoginManager(app)
+    login.login_view = 'auth.login'
+    @login.user_loader
+    def load_user(user_id):
+        # Re-create the User object from its ID
+        conn = __import__('auth').get_db()
+        row = conn.execute("SELECT id,email FROM users WHERE id=?", (user_id,)).fetchone()
+        conn.close()
+        return User(row[0], row[1]) if row else None
 
-@app.route('/', methods=['GET','POST'])
-def dashboard():
-    init_db()
+    # Register blueprints
+    app.register_blueprint(auth_bp, url_prefix='/auth')
+    app.register_blueprint(dashboard_bp, url_prefix='/')
 
-    # ——————————————————————
-    # Handle form submission (add or edit)
-    # ——————————————————————
-    if request.method == 'POST':
-        d = request.form['date']
-        c = request.form['cat']
-        a = float(request.form['amt'])
-        tx_id = request.form.get('id')
-        with sqlite3.connect(DB) as conn:
-            if tx_id:
-                conn.execute(
-                    'UPDATE tx SET date=?, cat=?, amt=? WHERE id=?',
-                    (d, c, a, tx_id)
-                )
-            else:
-                conn.execute(
-                    'INSERT INTO tx (date,cat,amt) VALUES (?,?,?)',
-                    (d, c, a)
-                )
-        return redirect(url_for('dashboard'))
+    return app
 
-    # ——————————————————————
-    # Date-range filter setup
-    # ——————————————————————
-    start = request.args.get('start')
-    end   = request.args.get('end')
-    where_clauses = []
-    params = []
-    if start:
-        where_clauses.append("date >= ?")
-        params.append(start)
-    if end:
-        where_clauses.append("date <= ?")
-        params.append(end)
-    where_sql = f"WHERE {' AND '.join(where_clauses)}" if where_clauses else ""
-
-    # ——————————————————————
-    # Handle edit pre-fill
-    # ——————————————————————
-    edit_id = request.args.get('edit')
-    tx_to_edit = None
-    if edit_id:
-        with sqlite3.connect(DB) as conn:
-            row = conn.execute(
-                'SELECT id, date, cat, amt FROM tx WHERE id=?',
-                (edit_id,)
-            ).fetchone()
-        if row:
-            tx_to_edit = {'id': row[0], 'date': row[1], 'cat': row[2], 'amt': row[3]}
-
-    # ——————————————————————
-    # Fetch filtered rows & summary
-    # ——————————————————————
-    with sqlite3.connect(DB) as conn:
-        rows = conn.execute(
-            f"SELECT id, date, cat, amt FROM tx {where_sql} "
-            "ORDER BY date DESC LIMIT 10",
-            params
-        ).fetchall()
-        summary = conn.execute(
-            f"SELECT cat, SUM(amt) FROM tx {where_sql} GROUP BY cat",
-            params
-        ).fetchall()
-
-    cats, sums = zip(*summary) if summary else ([], [])
-    chart_data = {'labels': cats, 'data': sums}
-
-    return render_template(
-        'dashboard.html',
-        rows=rows,
-        chart_data=json.dumps(chart_data),
-        tx=tx_to_edit
-    )
-
-@app.route('/delete/<int:id>')
-def delete_tx(id):
-    with sqlite3.connect(DB) as conn:
-        conn.execute('DELETE FROM tx WHERE id = ?', (id,))
-    return redirect(url_for('dashboard'))
+app = create_app()
 
 if __name__ == '__main__':
     app.run(debug=True)
