@@ -21,14 +21,23 @@ def register():
         if cur.fetchone():
             flash('Email already registered', 'danger')
         else:
-            conn.execute(
-              "INSERT INTO users (email,password_hash) VALUES (?,?)",
-              (email, generate_password_hash(pw))
+            # create and commit new user
+            cur = conn.execute(
+                "INSERT INTO users (email,password_hash) VALUES (?,?)",
+                (email, generate_password_hash(pw))
             )
             conn.commit()
+            user_id = cur.lastrowid
             conn.close()
-            flash('Account created! Please log in.', 'success')
-            return redirect(url_for('auth.login'))
+
+            # log them in immediately
+            user = User(user_id, email)
+            login_user(user)
+
+            # redirect to dashboard
+            return redirect(url_for('dashboard.dashboard'))
+
+    # on GET or failed POST
     return render_template('register.html')
 
 @auth_bp.route('/login', methods=['GET','POST'])
