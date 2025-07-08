@@ -34,7 +34,7 @@ A modern, single-page Flask app for tracking personal transactions and visualizi
    python app.py
 
 ## Deployment
-Deployed to Heroku: https://git.heroku.com/tk-finance-dashboard.git
+Deployed to Heroku: [https://git.heroku.com/tk-finance-dashboard.git](https://tk-finance-dashboard-6e6e0310736d.herokuapp.com/)
 
 Author: Tanmay Kundapur
 License: MIT
