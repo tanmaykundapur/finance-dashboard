@@ -21,6 +21,7 @@ def register():
         if cur.fetchone():
             flash('Email already registered', 'danger')
         else:
+<<<<<<< HEAD
             # create and commit new user
             cur = conn.execute(
                 "INSERT INTO users (email,password_hash) VALUES (?,?)",
@@ -38,6 +39,16 @@ def register():
             return redirect(url_for('dashboard.dashboard'))
 
     # on GET or failed POST
+=======
+            conn.execute(
+              "INSERT INTO users (email,password_hash) VALUES (?,?)",
+              (email, generate_password_hash(pw))
+            )
+            conn.commit()
+            conn.close()
+            flash('Account created! Please log in.', 'success')
+            return redirect(url_for('auth.login'))
+>>>>>>> origin/main
     return render_template('register.html')
 
 @auth_bp.route('/login', methods=['GET','POST'])
